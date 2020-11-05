@@ -2,22 +2,21 @@ import configparser
 import logging
 import telegram
 import random, os
+import json
 
 from flask import Flask, request
-from telegram.ext import Dispatcher, MessageHandler, Filters, Updater, CommandHandler, CallbackQueryHandler
+from telegram import message
+from telegram.ext import Dispatcher, MessageHandler, Filters, Updater, CommandHandler, CallbackQueryHandler, ConversationHandler
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from random import randint
 
 # Load data from config.ini file
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('C:\\Users\\0265\\Documents\\Elton\\WorkSpace\\python\\unicornfintech_opsbot\\config.ini')
 
-# 把語錄檔案載入
-if os.path.exists('sentences.txt'):
-    with open('sentences.txt') as FILE:
-        sentences = [sentence.strip() for sentence in FILE]
-else:
-    sentences = []
+x =  '{ "Server Name":"User Service", "IP":"10.10.7.186", "PORT":"Taiwan"}'
+
+configProd = configparser.ConfigParser()
+configProd.read('prod.ini')
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -30,7 +29,7 @@ app = Flask(__name__)
 # Initial bot by Telegram access token
 token=(config['TELEGRAM']['ACCESS_TOKEN'])
 bot = telegram.Bot(token)
-updater = Updater(token, use_context=True)
+updater = Updater(token, use_context=False)
 
 # New a dispatcher for bot
 dispatcher = Dispatcher(bot, None)
@@ -42,8 +41,6 @@ def webhook_handler():
     if request.method == "POST":
         update = telegram.Update.de_json(request.get_json(force=True), bot)
 
-        logger.info("POST")
-
         # Update dispatcher process that handler to process this message
         dispatcher.process_update(update)
     return 'ok'
@@ -53,81 +50,103 @@ def reply_handler(update: telegram.Update, context: telegram.ext.CallbackContext
     text = update.message.text
     update.message.reply_text(text)
 
-def hello(update: telegram.Update, context: telegram.ext.CallbackContext):
-    update.message.reply_text('hello, {}'.format(update.message.from_user.first_name))
-
-def add(update: telegram.Update, context: telegram.ext.CallbackContext):
-    print('from user:', update.message.from_user.id)
-    # 限制只有特定人才能新增語錄
-    # if update.message.from_user.id == YOUR_USER_ID_HERE:
-    if True:
-        sentence = update.message.text[5:].replace('\n', ' ')
-        sentences.append(sentence)
-        with open('sentences.txt', 'a') as FILE:
-            print(sentence, file=FILE)
-        update.message.reply_text('已加入：' + sentence)
-
-def say(update: telegram.Update, context: telegram.ext.CallbackContext):
-    if sentences:
-        update.message.reply_text(random.choice(sentences))
-    else:
-        update.message.reply_text('I have no words.')
-
-def calc(update: telegram.Update, context: telegram.ext.CallbackContext):
-    a, b = randint(1, 100), randint(1, 100)
-    update.message.reply_text('{} + {} = ?'.format(a, b),
-        reply_markup = InlineKeyboardMarkup([[
-                InlineKeyboardButton(str(s), callback_data = '{} {} {}'.format(a, b, s)) for s in range(a + b - randint(1, 3), a + b + randint(1, 3))
-            ]]))
-
-def answer(update: telegram.Update, context: telegram.ext.CallbackContext):
-    a, b, s = [int(x) for x in update.callback_query.data.split()]
-    if a + b == s:
-        update.callback_query.edit_message_text('你答對了！')
-    else:
-        update.callback_query.edit_message_text('你答錯囉！')
-
-hands = ['rock', 'paper', 'scissors']
-
-emoji = {
-    'rock': '👊',
-    'paper': '✋',
-    'scissors': '✌️'
-} 
-
 def start(update: telegram.Update, context: telegram.ext.CallbackContext):
-    update.message.reply_text('剪刀石頭布！',
+    update.message.reply_text('請選擇環境',
         reply_markup = InlineKeyboardMarkup([[
-                InlineKeyboardButton(emoji, callback_data = hand) for hand, emoji in emoji.items()
+                InlineKeyboardButton("PROD", callback_data='PROD'),
+                InlineKeyboardButton("BETA", callback_data='BETA'),
+                InlineKeyboardButton("ALPHA", callback_data='ALPHA')
             ]]))
 
-def judge(mine, yours):
-    if mine == yours:
-        return '平手'
-    elif (hands.index(mine) - hands.index(yours)) % 3 == 1:
-        return '我贏了'
-    else:
-        return '我輸了'
+MARKUP_1 = InlineKeyboardMarkup([[
+    InlineKeyboardButton("Q", callback_data='Q'),
+    InlineKeyboardButton("QQ", callback_data='QQ'),
+    InlineKeyboardButton("QQQ", callback_data='QQQ')
+]])
 
-def play(update: telegram.Update, context: telegram.ext.CallbackContext):
+MARKUP_2 = InlineKeyboardMarkup([
+    [InlineKeyboardButton('k', callback_data='two')]
+])
+
+def env(update: telegram.Update, context: telegram.ext.CallbackContext):
     try:
-        mine = random.choice(hands)
-        yours = update.callback_query.data
-        update.callback_query.edit_message_text('我出{}，你出{}，{}！'.format(emoji[mine], emoji[yours], judge(mine, yours)))
+        #data = update.callback_query.data
+
+        logger.info('message_id:{}'.format(update.callback_query.message.message_id))
+
+        update.message.reply_text('請選擇環境', MARKUP_1)
+
+        #update.callback_query.edit_message_text(text='QQ1234', chat_id=update.callback_query.message.chat_id, message_id=update.callback_query.message.message_id, MARKUP_1)
+
+        #if 'PROD' == data:
+        #    update.callback_query.edit_message_reply_markup('Q', MARKUP_1)
+        #elif 'BETA' == data:
+        #    update.callback_query.edit_message_reply_markup('chatid, messageid', MARKUP_2)
+        #else:
+        #    update.callback_query.edit_message_reply_markup('chatid, messageid', MARKUP_2)
     except Exception as e:
         print(e)
+
+FIRST, SECOND = range(2)
+
+def start2(bot: dispatcher.bot, update: telegram.Update):
+    print("start2 username:{}".format(bot.username))
+    keyboard = [
+        [InlineKeyboardButton(u"Next", callback_data=str(FIRST))]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text(
+        u"Start handler, Press next",
+        reply_markup=reply_markup
+    )
+    return FIRST
+
+def first(bot, update):
+    query = update.callback_query
+    keyboard = [
+        [InlineKeyboardButton(u"Next", callback_data=str(SECOND))]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    bot.edit_message_text(
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        text=u"First CallbackQueryHandler, Press next"
+    )
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    bot.edit_message_reply_markup(
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        reply_markup=reply_markup
+    )
+    return SECOND
+
+def second(bot, update):
+    query = update.callback_query
+    bot.edit_message_text(
+        chat_id=query.message.chat_id,
+        message_id=query.message.message_id,
+        text=u"Second CallbackQueryHandler"
+    )
+    return
 
 
 # Add handler for handling message, there are many kinds of message. For this handler, it particular handle text
 # message.
 # updater.dispatcher.add_handler(MessageHandler(Filters.text, reply_handler))
-updater.dispatcher.add_handler(CommandHandler('hello', hello))
-updater.dispatcher.add_handler(CommandHandler('add', add))
-updater.dispatcher.add_handler(CommandHandler('say', say))
-updater.dispatcher.add_handler(CommandHandler('calc', calc))
-# updater.dispatcher.add_handler(CallbackQueryHandler(answer))
-updater.dispatcher.add_handler(CommandHandler('start', start))
-updater.dispatcher.add_handler(CallbackQueryHandler(play))
+#updater.dispatcher.add_handler(CommandHandler('start', start))
+#updater.dispatcher.add_handler(CallbackQueryHandler(env))
+
+conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('start2', start2)],
+    states={
+        FIRST: [CallbackQueryHandler(first)],
+        SECOND: [CallbackQueryHandler(second)]
+    },
+    fallbacks=[CommandHandler('start', start2)]
+)
+updater.dispatcher.add_handler(conv_handler)
 
 updater.start_polling()
 updater.idle()
