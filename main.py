@@ -29,7 +29,7 @@ app = Flask(__name__)
 # Initial bot by Telegram access token
 token=(config['TELEGRAM']['ACCESS_TOKEN'])
 bot = telegram.Bot(token)
-updater = Updater(token, use_context=False)
+updater = Updater(token) # , use_context=False
 
 # New a dispatcher for bot
 dispatcher = Dispatcher(bot, None)
@@ -89,8 +89,7 @@ def env(update: telegram.Update, context: telegram.ext.CallbackContext):
 
 FIRST, SECOND = range(2)
 
-def start2(bot: dispatcher.bot, update: telegram.Update):
-    print("start2 username:{}".format(bot.username))
+def start2(update: telegram.Update, context: telegram.ext.CallbackContext):
     keyboard = [
         [InlineKeyboardButton(u"Next", callback_data=str(FIRST))]
     ]
@@ -101,13 +100,13 @@ def start2(bot: dispatcher.bot, update: telegram.Update):
     )
     return FIRST
 
-def first(bot, update):
+def first(update: telegram.Update, context: telegram.ext.CallbackContext):
     query = update.callback_query
     keyboard = [
         [InlineKeyboardButton(u"Next", callback_data=str(SECOND))]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    bot.edit_message_text(
+    update.effective_message.bot.edit_message_text(
         chat_id=query.message.chat_id,
         message_id=query.message.message_id,
         text=u"First CallbackQueryHandler, Press next"
@@ -115,16 +114,16 @@ def first(bot, update):
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    bot.edit_message_reply_markup(
+    update.effective_message.bot.edit_message_reply_markup(
         chat_id=query.message.chat_id,
         message_id=query.message.message_id,
         reply_markup=reply_markup
     )
     return SECOND
 
-def second(bot, update):
+def second(update: telegram.Update, context: telegram.ext.CallbackContext):
     query = update.callback_query
-    bot.edit_message_text(
+    update.effective_message.bot.edit_message_text(
         chat_id=query.message.chat_id,
         message_id=query.message.message_id,
         text=u"Second CallbackQueryHandler"
