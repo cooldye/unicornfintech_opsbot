@@ -50,85 +50,70 @@ def reply_handler(update: telegram.Update, context: telegram.ext.CallbackContext
     text = update.message.text
     update.message.reply_text(text)
 
+############################### Bot ############################################
 def start(update: telegram.Update, context: telegram.ext.CallbackContext):
-    update.message.reply_text('請選擇環境',
-        reply_markup = InlineKeyboardMarkup([[
-                InlineKeyboardButton("PROD", callback_data='PROD'),
-                InlineKeyboardButton("BETA", callback_data='BETA'),
-                InlineKeyboardButton("ALPHA", callback_data='ALPHA')
-            ]]))
+  update.message.reply_text(main_menu_message(),
+                            reply_markup=main_menu_keyboard())
 
-MARKUP_1 = InlineKeyboardMarkup([[
-    InlineKeyboardButton("Q", callback_data='Q'),
-    InlineKeyboardButton("QQ", callback_data='QQ'),
-    InlineKeyboardButton("QQQ", callback_data='QQQ')
-]])
+def main_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
+  query = update.callback_query
+  bot = update.effective_message.bot
+  bot.edit_message_text(chat_id=query.message.chat_id,
+                        message_id=query.message.message_id,
+                        text=main_menu_message(),
+                        reply_markup=main_menu_keyboard())
 
-MARKUP_2 = InlineKeyboardMarkup([
-    [InlineKeyboardButton('k', callback_data='two')]
-])
+def first_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
+  query = update.callback_query
+  bot = update.effective_message.bot
+  bot.edit_message_text(chat_id=query.message.chat_id,
+                        message_id=query.message.message_id,
+                        text=first_menu_message(),
+                        reply_markup=first_menu_keyboard())
 
-def env(update: telegram.Update, context: telegram.ext.CallbackContext):
-    try:
-        #data = update.callback_query.data
+def second_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
+  query = update.callback_query
+  bot = update.effective_message.bot
+  bot.edit_message_text(chat_id=query.message.chat_id,
+                        message_id=query.message.message_id,
+                        text=second_menu_message(),
+                        reply_markup=second_menu_keyboard())
 
-        logger.info('message_id:{}'.format(update.callback_query.message.message_id))
+# and so on for every callback_data option
+def first_submenu(update: telegram.Update, context: telegram.ext.CallbackContext):
+  pass
 
-        update.message.reply_text('請選擇環境', MARKUP_1)
+def second_submenu(update: telegram.Update, context: telegram.ext.CallbackContext):
+  pass
 
-        #update.callback_query.edit_message_text(text='QQ1234', chat_id=update.callback_query.message.chat_id, message_id=update.callback_query.message.message_id, MARKUP_1)
+############################ Keyboards #########################################
+def main_menu_keyboard():
+  keyboard = [[InlineKeyboardButton('Option 1', callback_data='m1')],
+              [InlineKeyboardButton('Option 2', callback_data='m2')],
+              [InlineKeyboardButton('Option 3', callback_data='m3')]]
+  return InlineKeyboardMarkup(keyboard)
 
-        #if 'PROD' == data:
-        #    update.callback_query.edit_message_reply_markup('Q', MARKUP_1)
-        #elif 'BETA' == data:
-        #    update.callback_query.edit_message_reply_markup('chatid, messageid', MARKUP_2)
-        #else:
-        #    update.callback_query.edit_message_reply_markup('chatid, messageid', MARKUP_2)
-    except Exception as e:
-        print(e)
+def first_menu_keyboard():
+  keyboard = [[InlineKeyboardButton('Submenu 1-1', callback_data='m1_1')],
+              [InlineKeyboardButton('Submenu 1-2', callback_data='m1_2')],
+              [InlineKeyboardButton('Main menu', callback_data='main')]]
+  return InlineKeyboardMarkup(keyboard)
 
-FIRST, SECOND = range(2)
+def second_menu_keyboard():
+  keyboard = [[InlineKeyboardButton('Submenu 2-1', callback_data='m2_1')],
+              [InlineKeyboardButton('Submenu 2-2', callback_data='m2_2')],
+              [InlineKeyboardButton('Main menu', callback_data='main')]]
+  return InlineKeyboardMarkup(keyboard)
 
-def start2(update: telegram.Update, context: telegram.ext.CallbackContext):
-    keyboard = [
-        [InlineKeyboardButton(u"Next", callback_data=str(FIRST))]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text(
-        u"Start handler, Press next",
-        reply_markup=reply_markup
-    )
-    return FIRST
+############################# Messages #########################################
+def main_menu_message():
+  return 'Choose the option in main menu:'
 
-def first(update: telegram.Update, context: telegram.ext.CallbackContext):
-    query = update.callback_query
-    keyboard = [
-        [InlineKeyboardButton(u"Next", callback_data=str(SECOND))]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.effective_message.bot.edit_message_text(
-        chat_id=query.message.chat_id,
-        message_id=query.message.message_id,
-        text=u"First CallbackQueryHandler, Press next"
-    )
+def first_menu_message():
+  return 'Choose the submenu in first menu:'
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    update.effective_message.bot.edit_message_reply_markup(
-        chat_id=query.message.chat_id,
-        message_id=query.message.message_id,
-        reply_markup=reply_markup
-    )
-    return SECOND
-
-def second(update: telegram.Update, context: telegram.ext.CallbackContext):
-    query = update.callback_query
-    update.effective_message.bot.edit_message_text(
-        chat_id=query.message.chat_id,
-        message_id=query.message.message_id,
-        text=u"Second CallbackQueryHandler"
-    )
-    return
+def second_menu_message():
+  return 'Choose the submenu in second menu:'
 
 
 # Add handler for handling message, there are many kinds of message. For this handler, it particular handle text
@@ -137,15 +122,12 @@ def second(update: telegram.Update, context: telegram.ext.CallbackContext):
 #updater.dispatcher.add_handler(CommandHandler('start', start))
 #updater.dispatcher.add_handler(CallbackQueryHandler(env))
 
-conv_handler = ConversationHandler(
-    entry_points=[CommandHandler('start2', start2)],
-    states={
-        FIRST: [CallbackQueryHandler(first)],
-        SECOND: [CallbackQueryHandler(second)]
-    },
-    fallbacks=[CommandHandler('start', start2)]
-)
-updater.dispatcher.add_handler(conv_handler)
+updater.dispatcher.add_handler(CommandHandler('start', start))
+updater.dispatcher.add_handler(CallbackQueryHandler(main_menu, pattern='main'))
+updater.dispatcher.add_handler(CallbackQueryHandler(first_menu, pattern='m1'))
+updater.dispatcher.add_handler(CallbackQueryHandler(second_menu, pattern='m2'))
+updater.dispatcher.add_handler(CallbackQueryHandler(first_submenu, pattern='m1_1'))
+updater.dispatcher.add_handler(CallbackQueryHandler(second_submenu, pattern='m2_1'))
 
 updater.start_polling()
 updater.idle()
