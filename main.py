@@ -85,7 +85,7 @@ def check_commission_run_status(update: telegram.Update, context: telegram.ext.C
     bot = update.effective_message.bot
     bot.edit_message_text(chat_id=query.message.chat_id,
                           message_id=query.message.message_id,
-                          text=second_menu_message(),
+                          text=check_commission_run_status_message(),
                           reply_markup=back_to_menu_keyboard())
 
 def second_submenu(update: telegram.Update, context: telegram.ext.CallbackContext):
@@ -124,8 +124,8 @@ def release_menu_message():
 def second_menu_message():
     return 'Choose the submenu in second menu:'
 
-def back_to_main_menu_message():
-    return 'Choose the Main menu go back'
+def check_commission_run_status_message():
+    return 'select * from tb_commission_run_status where commission_date = {commission date} \n AU DB: au_business、vfsc_business、asic_business \n VT DB: vt_business_db \n PUG DB: pug_business'
 
 
 # Add handler for handling message, there are many kinds of message. For this handler, it particular handle text
