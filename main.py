@@ -52,68 +52,80 @@ def reply_handler(update: telegram.Update, context: telegram.ext.CallbackContext
 
 ############################### Bot ############################################
 def start(update: telegram.Update, context: telegram.ext.CallbackContext):
-  update.message.reply_text(main_menu_message(),
-                            reply_markup=main_menu_keyboard())
+    update.message.reply_text(main_menu_message(),
+                              reply_markup=main_menu_keyboard())
 
 def main_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
-  query = update.callback_query
-  bot = update.effective_message.bot
-  bot.edit_message_text(chat_id=query.message.chat_id,
-                        message_id=query.message.message_id,
-                        text=main_menu_message(),
-                        reply_markup=main_menu_keyboard())
+    query = update.callback_query
+    bot = update.effective_message.bot
+    bot.edit_message_text(chat_id=query.message.chat_id,
+                          message_id=query.message.message_id,
+                          text=main_menu_message(),
+                          reply_markup=main_menu_keyboard())
 
-def first_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
-  query = update.callback_query
-  bot = update.effective_message.bot
-  bot.edit_message_text(chat_id=query.message.chat_id,
-                        message_id=query.message.message_id,
-                        text=first_menu_message(),
-                        reply_markup=first_menu_keyboard())
+def release_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
+    query = update.callback_query
+    bot = update.effective_message.bot
+    bot.edit_message_text(chat_id=query.message.chat_id,
+                          message_id=query.message.message_id,
+                          text=release_menu_message(),
+                          reply_markup=release_menu_keyboard())
 
 def second_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
-  query = update.callback_query
-  bot = update.effective_message.bot
-  bot.edit_message_text(chat_id=query.message.chat_id,
-                        message_id=query.message.message_id,
-                        text=second_menu_message(),
-                        reply_markup=second_menu_keyboard())
+    query = update.callback_query
+    bot = update.effective_message.bot
+    bot.edit_message_text(chat_id=query.message.chat_id,
+                          message_id=query.message.message_id,
+                          text=second_menu_message(),
+                          reply_markup=second_menu_keyboard())
 
 # and so on for every callback_data option
-def first_submenu(update: telegram.Update, context: telegram.ext.CallbackContext):
-  pass
+def check_commission_run_status(update: telegram.Update, context: telegram.ext.CallbackContext):
+    query = update.callback_query
+    bot = update.effective_message.bot
+    bot.edit_message_text(chat_id=query.message.chat_id,
+                          message_id=query.message.message_id,
+                          text=second_menu_message(),
+                          reply_markup=back_to_menu_keyboard())
 
 def second_submenu(update: telegram.Update, context: telegram.ext.CallbackContext):
-  pass
+    pass
 
 ############################ Keyboards #########################################
 def main_menu_keyboard():
-  keyboard = [[InlineKeyboardButton('Option 1', callback_data='m1')],
-              [InlineKeyboardButton('Option 2', callback_data='m2')],
-              [InlineKeyboardButton('Option 3', callback_data='m3')]]
-  return InlineKeyboardMarkup(keyboard)
+    keyboard = [[InlineKeyboardButton('release', callback_data='release')],
+                [InlineKeyboardButton('Option 2', callback_data='m2')],
+                [InlineKeyboardButton('Option 3', callback_data='m3')]]
+    return InlineKeyboardMarkup(keyboard)
 
-def first_menu_keyboard():
-  keyboard = [[InlineKeyboardButton('Submenu 1-1', callback_data='m1_1')],
-              [InlineKeyboardButton('Submenu 1-2', callback_data='m1_2')],
-              [InlineKeyboardButton('Main menu', callback_data='main')]]
-  return InlineKeyboardMarkup(keyboard)
+def release_menu_keyboard():
+    keyboard = [[InlineKeyboardButton('How to check commission run status', callback_data='check_commission_run_status')],
+                [InlineKeyboardButton('Submenu 1-2', callback_data='m1_2')],
+                [InlineKeyboardButton('Main menu', callback_data='main')]]
+    return InlineKeyboardMarkup(keyboard)
 
 def second_menu_keyboard():
-  keyboard = [[InlineKeyboardButton('Submenu 2-1', callback_data='m2_1')],
-              [InlineKeyboardButton('Submenu 2-2', callback_data='m2_2')],
-              [InlineKeyboardButton('Main menu', callback_data='main')]]
-  return InlineKeyboardMarkup(keyboard)
+    keyboard = [[InlineKeyboardButton('Submenu 2-1', callback_data='m2_1')],
+                [InlineKeyboardButton('Submenu 2-2', callback_data='m2_2')],
+                [InlineKeyboardButton('Main menu', callback_data='main')]]
+    return InlineKeyboardMarkup(keyboard)
+
+def back_to_menu_keyboard():
+    keyboard = [[InlineKeyboardButton('Main menu', callback_data='main')]]
+    return InlineKeyboardMarkup(keyboard)
 
 ############################# Messages #########################################
 def main_menu_message():
-  return 'Choose the option in main menu:'
+    return 'Choose the option in main menu:'
 
-def first_menu_message():
-  return 'Choose the submenu in first menu:'
+def release_menu_message():
+    return 'Choose the submenu in first menu:'
 
 def second_menu_message():
-  return 'Choose the submenu in second menu:'
+    return 'Choose the submenu in second menu:'
+
+def back_to_main_menu_message():
+    return 'Choose the Main menu go back'
 
 
 # Add handler for handling message, there are many kinds of message. For this handler, it particular handle text
@@ -124,9 +136,9 @@ def second_menu_message():
 
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CallbackQueryHandler(main_menu, pattern='main'))
-updater.dispatcher.add_handler(CallbackQueryHandler(first_menu, pattern='m1'))
+updater.dispatcher.add_handler(CallbackQueryHandler(release_menu, pattern='release'))
 updater.dispatcher.add_handler(CallbackQueryHandler(second_menu, pattern='m2'))
-updater.dispatcher.add_handler(CallbackQueryHandler(first_submenu, pattern='m1_1'))
+updater.dispatcher.add_handler(CallbackQueryHandler(check_commission_run_status, pattern='check_commission_run_status'))
 updater.dispatcher.add_handler(CallbackQueryHandler(second_submenu, pattern='m2_1'))
 
 updater.start_polling()
