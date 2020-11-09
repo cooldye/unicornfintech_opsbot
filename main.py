@@ -65,6 +65,7 @@ def main_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
 
 def release_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
     query = update.callback_query
+    print('query.data:{}'.format(query.data))
     bot = update.effective_message.bot
     bot.edit_message_text(chat_id=query.message.chat_id,
                           message_id=query.message.message_id,
@@ -73,6 +74,7 @@ def release_menu(update: telegram.Update, context: telegram.ext.CallbackContext)
 
 def second_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
     query = update.callback_query
+    print('query.data:{}'.format(query.data))
     bot = update.effective_message.bot
     bot.edit_message_text(chat_id=query.message.chat_id,
                           message_id=query.message.message_id,
@@ -80,12 +82,31 @@ def second_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
                           reply_markup=second_menu_keyboard())
 
 # and so on for every callback_data option
-def check_commission_run_status(update: telegram.Update, context: telegram.ext.CallbackContext):
+def check_commission_run_status_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
     query = update.callback_query
+    print('query.data:{}'.format(query.data))
     bot = update.effective_message.bot
     bot.edit_message_text(chat_id=query.message.chat_id,
                           message_id=query.message.message_id,
                           text=check_commission_run_status_message(),
+                          reply_markup=back_to_menu_keyboard())
+
+def check_maven_upload_status_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
+    query = update.callback_query
+    print('query.data:{}'.format(query.data))
+    bot = update.effective_message.bot
+    bot.edit_message_text(chat_id=query.message.chat_id,
+                          message_id=query.message.message_id,
+                          text=check_maven_upload_status_message(),
+                          reply_markup=check_maven_upload_status_menu_keyboard())
+
+def check_maven_upload_status_vntg_core_menu(update: telegram.Update, context: telegram.ext.CallbackContext):
+    query = update.callback_query
+    print('query.data:{}'.format(query.data))
+    bot = update.effective_message.bot
+    bot.edit_message_text(chat_id=query.message.chat_id,
+                          message_id=query.message.message_id,
+                          text=check_maven_upload_status_vntg_core_message(),
                           reply_markup=back_to_menu_keyboard())
 
 def second_submenu(update: telegram.Update, context: telegram.ext.CallbackContext):
@@ -100,13 +121,25 @@ def main_menu_keyboard():
 
 def release_menu_keyboard():
     keyboard = [[InlineKeyboardButton('How to check commission run status', callback_data='check_commission_run_status')],
-                [InlineKeyboardButton('Submenu 1-2', callback_data='m1_2')],
+                [InlineKeyboardButton('How to check maven upload status', callback_data='check_maven_upload_status')],
                 [InlineKeyboardButton('Main menu', callback_data='main')]]
     return InlineKeyboardMarkup(keyboard)
 
 def second_menu_keyboard():
     keyboard = [[InlineKeyboardButton('Submenu 2-1', callback_data='m2_1')],
                 [InlineKeyboardButton('Submenu 2-2', callback_data='m2_2')],
+                [InlineKeyboardButton('Main menu', callback_data='main')]]
+    return InlineKeyboardMarkup(keyboard)
+
+def check_maven_upload_status_menu_keyboard():
+    keyboard = [[InlineKeyboardButton('vntg-core', callback_data='vntgcore')],
+                [InlineKeyboardButton('payment-api', callback_data='payment-api')],
+                #[InlineKeyboardButton('public-config', callback_data='public-config')],
+                #[InlineKeyboardButton('common-utils', callback_data='common-utils')],
+                #[InlineKeyboardButton('user-api', callback_data='user-api')],
+                #[InlineKeyboardButton('public-api', callback_data='public-api')],
+                #[InlineKeyboardButton('config-api', callback_data='config-api')],
+                #[InlineKeyboardButton('ib-parent', callback_data='ib-parent')],
                 [InlineKeyboardButton('Main menu', callback_data='main')]]
     return InlineKeyboardMarkup(keyboard)
 
@@ -125,7 +158,13 @@ def second_menu_message():
     return 'Choose the submenu in second menu:'
 
 def check_commission_run_status_message():
-    return 'select * from tb_commission_run_status where commission_date = {commission date} \n AU DB: au_business、vfsc_business、asic_business \n VT DB: vt_business_db \n PUG DB: pug_business'
+    return 'select * from tb_commission_run_status where commission_date = {commission date}; \n status:1 and 3 mean completed; 0 means running; 2 means failed \n AU DB: au_business、vfsc_business、asic_business \n VT DB: vt_business_db \n PUG DB: pug_business'
+
+def check_maven_upload_status_message():
+    return 'Choose the project name'
+
+def check_maven_upload_status_vntg_core_message():
+    return 'Click http://maven.fintechs-inc.com:2190/nexus/content/repositories/releases/com/ty/vntg-core/5.0.0-RELEASE/ to Check Last Modified and file size'
 
 
 # Add handler for handling message, there are many kinds of message. For this handler, it particular handle text
@@ -138,7 +177,9 @@ updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CallbackQueryHandler(main_menu, pattern='main'))
 updater.dispatcher.add_handler(CallbackQueryHandler(release_menu, pattern='release'))
 updater.dispatcher.add_handler(CallbackQueryHandler(second_menu, pattern='m2'))
-updater.dispatcher.add_handler(CallbackQueryHandler(check_commission_run_status, pattern='check_commission_run_status'))
+updater.dispatcher.add_handler(CallbackQueryHandler(check_commission_run_status_menu, pattern='check_commission_run_status'))
+updater.dispatcher.add_handler(CallbackQueryHandler(check_maven_upload_status_menu, pattern='check_maven_upload_status'))
+updater.dispatcher.add_handler(CallbackQueryHandler(check_maven_upload_status_vntg_core_menu, pattern='vntgcore'))
 updater.dispatcher.add_handler(CallbackQueryHandler(second_submenu, pattern='m2_1'))
 
 updater.start_polling()
